@@ -1,0 +1,49 @@
+---
+- name: Deploy School Events App
+  hosts: app_servers
+  become: true
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install dependencies
+      apt:
+        name: [curl, git, ca-certificates]
+        state: present
+
+    - name: Install Docker
+      shell: curl -fsSL https://get.docker.com | sh
+      args:
+        creates: /usr/bin/docker
+
+    - name: Add ubuntu user to docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Clone the repo
+      git:
+        repo: https://github.com/ping670/schoolproject.git
+        dest: /home/ubuntu/schoolproject
+        version: master
+        force: yes
+      become_user: ubuntu
+
+    - name: Create .env file
+      copy:
+        dest: /home/ubuntu/schoolproject/.env
+        content: |
+          PORT=5000
+          DATABASE_URL=postgresql://postgres:postgres@db:5432/school_events
+          JWT_SECRET=change_this_in_production
+        owner: ubuntu
+        mode: '0600'
+
+    - name: Start app with docker compose
+      shell: docker compose up -d --build
+      args:
+        chdir: /home/ubuntu/schoolproject
+      become_user: ubuntu
