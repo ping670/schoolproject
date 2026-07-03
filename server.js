@@ -50,7 +50,14 @@ app.delete('/registrations/:id', authenticateToken, requireRole('student'), canc
 app.get('/registrations/me', authenticateToken, requireRole('student'), getRegistrationsMe);
 app.get('/events/:id/registrations', authenticateToken, requireRole('organiser'), getEventRegistrationsOrganizer);
 app.get('/events/:id/waitlist', authenticateToken, requireRole('organiser'), getEventWaitlistOrganizer);
-
+app.get('/notification-jobs', authenticateToken, async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM notification_jobs ORDER BY created_at DESC LIMIT 50');
+    res.status(200).json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Грешка при извличане на известия.' });
+  }
+});
 app.use((err, req, res, next) => {
   console.error('Непредвидена грешка в сървъра:', err.stack);
   res.status(500).json({ error: 'Възникна системна сървърна грешка. Моля, опитайте отново по-късно.' });
