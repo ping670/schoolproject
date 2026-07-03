@@ -370,3 +370,12 @@ infra/terraform/*.tfvars
 
 # Ansible
 infra/ansible/inventory.ini
+
+# Terraform
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/*.tfvars
+
+# Ansible
+infra/ansible/inventory.ini
