@@ -39,16 +39,18 @@ export const getEvents = async (req, res) => {
     let params = [];
 
     if (userRole === 'student') {
-      sql = "SELECT * FROM events WHERE status = 'published' ORDER BY starts_at ASC";
+      sql = `SELECT e.*, 
+        COALESCE((SELECT COUNT(*)::int FROM event_registrations WHERE event_id = e.id AND status = 'confirmed'), 0) as confirmed_count,
+        COALESCE((SELECT COUNT(*)::int FROM event_registrations WHERE event_id = e.id AND status = 'waitlisted'), 0) as waitlist_count
+        FROM events e WHERE e.status = 'published' ORDER BY e.starts_at ASC`;
     } else {
-      sql = `
-        SELECT * FROM events 
-        WHERE status = 'published' OR organiser_id = $1 
-        ORDER BY starts_at ASC
-      `;
+      sql = `SELECT e.*, 
+        COALESCE((SELECT COUNT(*)::int FROM event_registrations WHERE event_id = e.id AND status = 'confirmed'), 0) as confirmed_count,
+        COALESCE((SELECT COUNT(*)::int FROM event_registrations WHERE event_id = e.id AND status = 'waitlisted'), 0) as waitlist_count
+        FROM events e WHERE e.status = 'published' OR e.organiser_id = $1 
+        ORDER BY e.starts_at ASC`;
       params = [userId];
     }
-
     const result = await query(sql, params);
     res.status(200).json(result.rows);
   } catch (error) {
